@@ -21,22 +21,17 @@ def categorie_du_site (website):
     # findChild('li').findChildren('a'):
         href_categorie = prefixe_URL + i.get('href')
         URL_categorie.append(href_categorie)
-        # print(i)
-    # print(URL_categorie)
     return(URL_categorie)
 
 #Extraction des URL de livres pour une page de catégorie
 def listes_livres_par_categorie(URL):
     reponse = requests.get(URL)
     soup = BeautifulSoup(reponse.text, 'lxml')
-    for i in soup.find_all(class_='product_pod'):              
-        # print(i)
+    for i in soup.find_all(class_='product_pod'):
         for j in i.find_all(class_='image_container'):               #renforcer la sélection avec l'ensemble au-dessus
             sufixe_URL = j.findChild('a').get('href')
-            # print(sufixe_URL)
             URL_complet = sufixe_URL.replace("../../..", "http://books.toscrape.com/catalogue")
             href_livres_in_categorie.append(URL_complet)
-            # print(URL_complet)
     return(href_livres_in_categorie)
 
 #Création des pages de catégorie suivants l'index (page 1)
@@ -55,21 +50,10 @@ def traitement_pour_plusieurs_pages_par_categorie(URL):
         ()
     
     for i in range(1,nb_page):    #struture erreur for i in nb_page:, corrigé
-    # if i != 0:
         prefixe_URL = URL.rstrip("index.html")
         sufixe_URL = ("page-"+str(i+1)+".html")
         page_suivante = prefixe_URL + sufixe_URL
-        # print(URL)
-        # print(type(new_url))
-        # print(page_suivante)
-        # print(type(page_suivante))
         new_url.append(page_suivante)
-    # if i == 0:
-        # print("Verif i == 0")
-        # ()
-    else:
-        ()
-    # print(new_url)
     return(new_url)
 
 #Extraction des informations pour un livre
@@ -87,21 +71,25 @@ def parser_un_livre(URL_livre):                           #ajouter tableau en pa
     #Extraction de l'image associé
     lien_image_partiel = soup_livre.find(id='product_gallery').findChild(class_='item active').findChild('img').get('src')
     lien_image_complet = lien_image_partiel.replace("../..", prefixe_URL)
-    # print(lien_image_complet)
+    print(lien_image_complet)
     #Extraction info produit
     tds = soup_livre.find(class_="table table-striped").findChildren('td')
     product_information = []
     for i in tds:
         valeur_tds = i.text
         product_information.append(valeur_tds)
-    list_livre = [URL_livre, product_information[0], titre, product_information[2], product_information[3], product_information[5], description, categorie, product_information[6]]
+    #Extraction de l'image associé
+    lien_image_partiel = soup_livre.find(id='product_gallery').findChild(class_='item active').findChild('img').get('src')
+    lien_image_complet = lien_image_partiel.replace("../..", prefixe_URL)
+    list_livre = [URL_livre, product_information[0], titre, product_information[2], product_information[3], product_information[5], description, categorie, product_information[6], lien_image_complet]
+    print(list_livre)
     return(list_livre)
 
 
 ### CODE PRINCIPAL
 
 count= 0
-entete_csv = ('product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax', 'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating')
+entete_csv = ('product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax', 'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating', 'image_url')
 URL_categorie = categorie_du_site(website)
 for i in URL_categorie:
     # URL_categorie.append(i)
@@ -113,14 +101,6 @@ for i in URL_categorie:
 
 for i in URL_categorie:
     href_categorie = listes_livres_par_categorie(i)
-    # print(i)
-    # print(href_categorie)
-    # href_categorie.clear()
-# print(href_categorie)
-# print(len(href_categorie))
-
-
-
 
 
 
