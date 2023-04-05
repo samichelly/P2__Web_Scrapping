@@ -65,6 +65,8 @@ def parser_un_livre(URL_livre):                           #ajouter tableau en pa
     #Extraction description OK
     descript = soup_livre.find(class_="product_page").findChildren('p')
     description = descript[3].text
+    if description == '\n\n\n\n\n\n':
+        description = 'Pas de desciption disponible'
     #Extraction catégorie OK
     soup_categorie = soup_livre.find(class_="breadcrumb").findChildren('a')
     categorie = soup_categorie[2].text
@@ -165,7 +167,7 @@ for i in href_categorie:
     tableau.loc[len(tableau)] = liste_livre
     # print(tableau)
 for categorie_dataframe, group in tableau.groupby('category'):
-    group.to_csv(f'output\{categorie_dataframe}.csv', index=None)
+    group.to_csv(f'output\{categorie_dataframe}.csv', index=None, )
 
 
 # Voir si une catégorie unique peut être demandée
