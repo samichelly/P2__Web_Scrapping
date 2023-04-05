@@ -78,11 +78,26 @@ def parser_un_livre(URL_livre):                           #ajouter tableau en pa
     for i in tds:
         valeur_tds = i.text
         product_information.append(valeur_tds)
+    #Extraction Star-rating
+    class_star = soup_livre.find(class_="instock availability").find_next('p')
+    star_review = class_star['class'][1]
+    if star_review == 'One':
+        review_rating = 1
+    elif star_review == 'Two':
+        review_rating = 2
+    elif star_review == 'Three':
+        review_rating = 3
+    elif star_review == 'Four':
+        review_rating = 4
+    elif star_review == 'Five':
+        review_rating = 5
+    else :
+        review_rating = 0
     #Extraction de l'image associé
     lien_image_partiel = soup_livre.find(id='product_gallery').findChild(class_='item active').findChild('img').get('src')
     lien_image_complet = lien_image_partiel.replace("../..", prefixe_URL)
-    list_livre = [URL_livre, product_information[0], titre, product_information[2], product_information[3], product_information[5], description, categorie, product_information[6], lien_image_complet]
-    print(list_livre)
+    list_livre = [URL_livre, product_information[0], titre, product_information[2], product_information[3], product_information[5], description, categorie, review_rating, lien_image_complet]
+    print(list_livre[-1], list_livre[-2])
     return(list_livre)
 
 
