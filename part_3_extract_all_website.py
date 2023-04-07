@@ -1,7 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
-import csv
-import pandas
+import pandas as pd
+from PIL import Image
+from io import BytesIO
+import os
 
 website = 'http://books.toscrape.com/index.html'
 URL = ['http://books.toscrape.com/catalogue/category/books/romance_8/index.html', 'http://books.toscrape.com/catalogue/category/books/fiction_10/index.html']
@@ -15,20 +17,47 @@ def categorie_du_site (website):
     reponse = requests.get(website)
     soup = BeautifulSoup(reponse.text, 'lxml')
     URL_categorie = []
-    # prefixe_URL = 'http://books.toscrape.com/'
-    # for i in soup.find(class_='side_categories').findChild(class_='nav nav-list').findChild('li').findChild('a'):
     for i in soup.find(class_='side_categories').findChild(class_='nav nav-list').find_next('ul').findChildren('a'):
-    # findChild('li').findChildren('a'):
         href_categorie = prefixe_URL + i.get('href')
         URL_categorie.append(href_categorie)
     return(URL_categorie)
+
+# def creation_dataframe_par_categorie(text_categorie):
+    nom_categorie = categorie_du_site(text_categorie)
+    liste_nom_categorie = nom_categorie[1]
+    tableaux = {}
+    entete_csv = ('product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax', 'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating', 'image_url')
+    for categorie_tableau in liste_nom_categorie:
+        cle_tableau = categorie_tableau
+        print(categorie_tableau)
+        categorie_tableau =  pd.DataFrame(columns = entete_csv)
+        tableaux[cle_tableau] = categorie_tableau
+    return(tableaux)
+
+# def remplissage_dataframe(tableaux, liste_livre):
+    categorie = liste_livre[-3]
+    for i in tableaux :
+        if i.keys() == categorie:
+            tableaux.loc[len(tableaux)] = liste_livre
+        else:
+            ()
+
+
+        print(liste_livre[-3])
+        print(tableaux)
+        tableaux.loc[len(tableaux)] = liste_livre
+        categorie.append(liste_livre[-3])
+    else:
+        tableaux.loc[len(tableaux)] = liste_livre
+    print(categorie)
+
 
 #Extraction des URL de livres pour une page de catégorie
 def listes_livres_par_categorie(URL):
     reponse = requests.get(URL)
     soup = BeautifulSoup(reponse.text, 'lxml')
     for i in soup.find_all(class_='product_pod'):
-        for j in i.find_all(class_='image_container'):               #renforcer la sélection avec l'ensemble au-dessus
+        for j in i.find_all(class_='image_container'):
             sufixe_URL = j.findChild('a').get('href')
             URL_complet = sufixe_URL.replace("../../..", "http://books.toscrape.com/catalogue")
             href_livres_in_categorie.append(URL_complet)
@@ -73,13 +102,23 @@ def parser_un_livre(URL_livre):                           #ajouter tableau en pa
     #Extraction de l'image associé
     lien_image_partiel = soup_livre.find(id='product_gallery').findChild(class_='item active').findChild('img').get('src')
     lien_image_complet = lien_image_partiel.replace("../..", prefixe_URL)
-    print(lien_image_complet)
     #Extraction info produit
     tds = soup_livre.find(class_="table table-striped").findChildren('td')
     product_information = []
     for i in tds:
         valeur_tds = i.text
         product_information.append(valeur_tds)
+    #Extraction de l'image associé
+    lien_image_partiel = soup_livre.find(id='product_gallery').findChild(class_='item active').findChild('img').get('src')
+    lien_image_complet = lien_image_partiel.replace("../..", prefixe_URL)
+    #Enregistrement image de livre
+    reponse_image = requests.get(lien_image_complet)
+    reponse_image = reponse_image.content
+    print(reponse_image)
+    img = Image.open(BytesIO(reponse_image))
+    if not os.path.exists(f'output/{categorie}'):
+        os.makedirs(f'output/{categorie}')
+    image = img.save(f'output/{categorie}/{product_information[0]}.jpg')
     #Extraction Star-rating
     class_star = soup_livre.find(class_="instock availability").find_next('p')
     star_review = class_star['class'][1]
@@ -95,17 +134,19 @@ def parser_un_livre(URL_livre):                           #ajouter tableau en pa
         review_rating = 5
     else :
         review_rating = 0
-    #Extraction de l'image associé
-    lien_image_partiel = soup_livre.find(id='product_gallery').findChild(class_='item active').findChild('img').get('src')
-    lien_image_complet = lien_image_partiel.replace("../..", prefixe_URL)
     list_livre = [URL_livre, product_information[0], titre, product_information[2], product_information[3], product_information[5], description, categorie, review_rating, lien_image_complet]
-    print(list_livre[-1], list_livre[-2])
+    # creation_dataframe_par_categorie(list_livre)
+
     return(list_livre)
+
+
+
+
+
 
 
 ### CODE PRINCIPAL
 
-count= 0
 entete_csv = ('product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax', 'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating', 'image_url')
 URL_categorie = categorie_du_site(website)
 for i in URL_categorie:
@@ -119,56 +160,10 @@ for i in URL_categorie:
 for i in URL_categorie:
     href_categorie = listes_livres_par_categorie(i)
 
-
-
-# liste_livre_precedent = ''
-# for i in href_categorie:
-#     liste_livre = parser_un_livre(i)
-#     print(liste_livre[-2])
-
-
-    #TEST 1
-    # if liste_livre_precedent != liste_livre[-2]:
-    #     tableau = pandas.DataFrame(columns = entete_csv)
-    #     tableau.loc[count] = liste_livre
-    #     print(tableau)
-    # else:
-    #     tableau.loc[count] = liste_livre
-    #     print("ELSE")
-    #     print(tableau)
-    # liste_livre_precedent = liste_livre[-2]
-    # print(liste_livre_precedent)
-    # print(liste_livre[-2])
-
-    #TEST 2
-#     count +=1
-#     if count == 1 :
-#         tableau = pandas.DataFrame(columns = entete_csv)
-#         tableau.loc[count] = liste_livre
-#     else:
-#         tableau.loc[count] = liste_livre
-
-
-# print(tableau)
-# tableau.to_csv('test_2_book.csv', header=entete_csv, encoding='utf-8')
-
-
-
-
-
-
-
-
-tableau = pandas.DataFrame(columns = entete_csv)
-# liste_livre_precedent = ''
+tableau = pd.DataFrame(columns = entete_csv)
 for i in href_categorie:
     liste_livre = parser_un_livre(i)
-    # print(liste_livre[-2])
     tableau.loc[len(tableau)] = liste_livre
-    # print(tableau)
+    categorie_dossier = liste_livre[-3]
 for categorie_dataframe, group in tableau.groupby('category'):
-    group.to_csv(f'output\{categorie_dataframe}.csv', index=None, )
-
-
-# Voir si une catégorie unique peut être demandée
-
+    group.to_csv(f'output/{categorie_dossier}/{categorie_dataframe}.csv', index=None,  sep= ';',  encoding='utf-32')
