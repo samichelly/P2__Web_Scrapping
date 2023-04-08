@@ -1,18 +1,16 @@
 import requests, os, re, pandas as pd
 from bs4 import BeautifulSoup
-# import pandas as pd
 from PIL import Image
 from io import BytesIO
-# import os, re
 
 website = 'http://books.toscrape.com/index.html'
-URL = ['http://books.toscrape.com/catalogue/category/books/romance_8/index.html', 'http://books.toscrape.com/catalogue/category/books/fiction_10/index.html']
+# URL = ['http://books.toscrape.com/catalogue/category/books/romance_8/index.html', 'http://books.toscrape.com/catalogue/category/books/fiction_10/index.html']
 href_livres_in_categorie = []
 prefixe_URL = 'http://books.toscrape.com/'
 
-
 ### FONCTIONS
 
+# Extraction des categories de BooksToscrape
 def categorie_du_site (website):
     reponse = requests.get(website)
     soup = BeautifulSoup(reponse.text, 'lxml')
@@ -25,8 +23,7 @@ def categorie_du_site (website):
     return(URL_categorie, text_categorie)
 
 # def creation_dataframe_par_categorie(text_categorie):
-    nom_categorie = categorie_du_site(text_categorie)
-    liste_nom_categorie = nom_categorie[1]
+    liste_nom_categorie = categorie_du_site(text_categorie)[1]
     tableaux = {}
     entete_csv = ('product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax', 'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating', 'image_url')
     for categorie_tableau in liste_nom_categorie:
@@ -53,7 +50,6 @@ def categorie_du_site (website):
         tableaux.loc[len(tableaux)] = liste_livre
     print(categorie)
 
-
 #Extraction des URL de livres pour une page de catégorie
 def listes_livres_par_categorie(URL):
     reponse = requests.get(URL)
@@ -71,7 +67,6 @@ def traitement_pour_plusieurs_pages_par_categorie(URL):
     soup = BeautifulSoup(reponse.text, 'lxml')
     nb_page = 0
     new_url = []
-    char2 = ''
     if soup.find(class_="pager"):
         text_pager = soup.find(class_='current').get_text()
         char = text_pager.strip()
@@ -82,7 +77,6 @@ def traitement_pour_plusieurs_pages_par_categorie(URL):
         sufixe_URL = ("page-"+str(i+1)+".html")
         page_suivante = prefixe_URL + sufixe_URL
         new_url.append(page_suivante)
-    # print(new_url)
     return(new_url)
 
 #Extraction des informations pour un livre
@@ -109,7 +103,6 @@ def parser_un_livre(URL_livre):                           #ajouter tableau en pa
     prix_Tax = product_information[2].lstrip('Â£')
     prix_HTax = product_information[3].lstrip('Â£')
     quantite_dispo = ''.join(re.findall("[0-9]", product_information[5]))
-
     #Extraction de l'image associé
     lien_image_partiel = soup_livre.find(id='product_gallery').findChild(class_='item active').findChild('img').get('src')
     lien_image_complet = lien_image_partiel.replace("../..", prefixe_URL)
@@ -157,24 +150,19 @@ for i, cat_nom in enumerate(nom_categorie):
     dictionnaire_nom_categorie[i+1] = cat_nom
 for i, cat_URL in enumerate(URL_categorie):
     dictionnaire_URL_categorie[i+1] = cat_URL
-# print(URL_categorie)
-# print(nom_categorie)
-# print(dictionnaire_URL_categorie)
-print(f'{dictionnaire_nom_categorie} \n')
+print(f'LES CATEGORIES : \n {dictionnaire_nom_categorie} \n')
 selection_categorie = []
-selection_categorie = input('Entrez le nombre associé à la catégorie : ')
+selection_categorie = input('Entrez le numéro associé à la catégorie : ')
 selection_categorie = int(selection_categorie)
-# print(f'selection = {selection_categorie}')
-# print(type(selection_categorie))
-# print(type(dictionnaire_URL_categorie))
-URL_categorie_selection = [dictionnaire_URL_categorie[selection_categorie]]
+if selection_categorie != 0:
+    URL_categorie_selection = [dictionnaire_URL_categorie[selection_categorie]]
+else:
+    URL_categorie_selection = URL_categorie
 print(URL_categorie_selection)
 
 for i in URL_categorie_selection:
     print(i)
     URL_complement = traitement_pour_plusieurs_pages_par_categorie(i)
-    # print(URL_complement)
-    # URL_categorie.append(URL_complement)                          #crée des listes dans la listes, problème
     URL_categorie = URL_categorie_selection + URL_complement
 print(f'URL categorie : {URL_categorie}')
 
@@ -190,5 +178,6 @@ for i in href_categorie:
     tableau.loc[len(tableau)] = liste_livre
     categorie_dossier = liste_livre[-3]
     print(categorie_dossier)
+print(tableau)
 for categorie_dataframe, group in tableau.groupby('category'):
     group.to_csv(f'output/{categorie_dossier}/{categorie_dataframe}.csv', index=None,  sep= ';',  encoding='utf-32')
