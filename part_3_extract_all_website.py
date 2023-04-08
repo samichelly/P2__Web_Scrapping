@@ -17,38 +17,44 @@ def categorie_du_site (website):
     URL_categorie = []
     text_categorie = []
     for i in soup.find(class_='side_categories').findChild(class_='nav nav-list').find_next('ul').findChildren('a'):
+        count =+ 1
+        # print(count)
         href_categorie = prefixe_URL + i.get('href')
         URL_categorie.append(href_categorie)
         text_categorie.append(i.text.strip())
+    creation_dataframe_par_categorie(text_categorie)
+    # print(f'Listes text categorie : {text_categorie}')
     return(URL_categorie, text_categorie)
 
-# def creation_dataframe_par_categorie(text_categorie):
-    liste_nom_categorie = categorie_du_site(text_categorie)[1]
+def creation_dataframe_par_categorie(text_categorie):
+    # liste_nom_categorie = categorie_du_site(text_categorie)
+    liste_nom_categorie = text_categorie
+    # print(f'Noms categorie : {liste_nom_categorie}')
     tableaux = {}
     entete_csv = ('product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax', 'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating', 'image_url')
     for categorie_tableau in liste_nom_categorie:
-        cle_tableau = categorie_tableau
-        print(categorie_tableau)
-        categorie_tableau =  pd.DataFrame(columns = entete_csv)
-        tableaux[cle_tableau] = categorie_tableau
+        # tableaux[categorie_tableau] = categorie_tableau
+        tableaux[categorie_tableau] = pd.DataFrame(columns = entete_csv)
+    print(type(tableaux))
+    # print(tableaux)
     return(tableaux)
 
-# def remplissage_dataframe(tableaux, liste_livre):
-    categorie = liste_livre[-3]
-    for i in tableaux :
-        if i.keys() == categorie:
-            tableaux.loc[len(tableaux)] = liste_livre
-        else:
-            ()
+# # def remplissage_dataframe(tableaux, liste_livre):
+#     categorie = liste_livre[-3]
+#     for i in tableaux :
+#         if i.keys() == categorie:
+#             tableaux.loc[len(tableaux)] = liste_livre
+#         else:
+#             ()
 
+#         print(liste_livre[-3])
+#         print(tableaux)
+#         tableaux.loc[len(tableaux)] = liste_livre
+#         categorie.append(liste_livre[-3])
+#     else:
+#         tableaux.loc[len(tableaux)] = liste_livre
+#     print(categorie)
 
-        print(liste_livre[-3])
-        print(tableaux)
-        tableaux.loc[len(tableaux)] = liste_livre
-        categorie.append(liste_livre[-3])
-    else:
-        tableaux.loc[len(tableaux)] = liste_livre
-    print(categorie)
 
 #Extraction des URL de livres pour une page de catégorie
 def listes_livres_par_categorie(URL):
@@ -64,11 +70,9 @@ def listes_livres_par_categorie(URL):
 #Création des pages de catégorie suivants l'index (page 1)
 def traitement_pour_plusieurs_pages_par_categorie(URL):
     reponse = requests.get(URL)
-    print(reponse)
     soup = BeautifulSoup(reponse.text, 'lxml')
     nb_page = 0
     if soup.find(class_="pager"):
-        print("Nouvelle page")
         text_pager = soup.find(class_='current').get_text()
         char = text_pager.strip()
         char2 = char.replace("Page 1 of ", "")
@@ -78,7 +82,6 @@ def traitement_pour_plusieurs_pages_par_categorie(URL):
         sufixe_URL = ("page-"+str(i+1)+".html")
         page_suivante = prefixe_URL + sufixe_URL
         new_url.append(page_suivante)
-    print(f'Nouvelles URL : {new_url}')
     return(new_url)
 
 #Extraction des informations pour un livre
@@ -143,8 +146,11 @@ def parser_un_livre(URL_livre):                           #ajouter tableau en pa
 ### CODE PRINCIPAL
 
 entete_csv = ('product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax', 'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating', 'image_url')
-URL_categorie = categorie_du_site(website)[0]
-nom_categorie = categorie_du_site(website)[1]
+retour_data_categorie_du_site = categorie_du_site(website)
+URL_categorie = retour_data_categorie_du_site[0]
+nom_categorie = retour_data_categorie_du_site[1]
+# URL_categorie = categorie_du_site(website)[0]
+# nom_categorie = categorie_du_site(website)[1]
 dictionnaire_nom_categorie = {0 : "ANALYSER L'ENSEMBLE DES CATEGORIES"}
 dictionnaire_URL_categorie = {0 : URL_categorie}
 for i, cat_nom in enumerate(nom_categorie):
@@ -170,6 +176,8 @@ for i in URL_categorie:
     href_categorie = listes_livres_par_categorie(i)
 print(len(href_categorie))
 
+
+# creation_dataframe_par_categorie(nom_categorie)
 
 tableau = pd.DataFrame(columns = entete_csv)
 for i in href_categorie:
