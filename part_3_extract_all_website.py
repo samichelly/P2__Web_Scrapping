@@ -7,7 +7,7 @@ website = 'http://books.toscrape.com/index.html'
 # URL = ['http://books.toscrape.com/catalogue/category/books/romance_8/index.html', 'http://books.toscrape.com/catalogue/category/books/fiction_10/index.html']
 href_livres_in_categorie = []
 prefixe_URL = 'http://books.toscrape.com/'
-
+new_url = []
 ### FONCTIONS
 
 # Extraction des categories de BooksToscrape
@@ -64,10 +64,11 @@ def listes_livres_par_categorie(URL):
 #Création des pages de catégorie suivants l'index (page 1)
 def traitement_pour_plusieurs_pages_par_categorie(URL):
     reponse = requests.get(URL)
+    print(reponse)
     soup = BeautifulSoup(reponse.text, 'lxml')
     nb_page = 0
-    new_url = []
     if soup.find(class_="pager"):
+        print("Nouvelle page")
         text_pager = soup.find(class_='current').get_text()
         char = text_pager.strip()
         char2 = char.replace("Page 1 of ", "")
@@ -77,6 +78,7 @@ def traitement_pour_plusieurs_pages_par_categorie(URL):
         sufixe_URL = ("page-"+str(i+1)+".html")
         page_suivante = prefixe_URL + sufixe_URL
         new_url.append(page_suivante)
+    print(f'Nouvelles URL : {new_url}')
     return(new_url)
 
 #Extraction des informations pour un livre
@@ -106,17 +108,17 @@ def parser_un_livre(URL_livre):                           #ajouter tableau en pa
     #Extraction de l'image associé
     lien_image_partiel = soup_livre.find(id='product_gallery').findChild(class_='item active').findChild('img').get('src')
     lien_image_complet = lien_image_partiel.replace("../..", prefixe_URL)
-    print(lien_image_complet)
+    # print(lien_image_complet)
     #Enregistrement image de livre
     reponse_image = requests.get(lien_image_complet)
     reponse_image = reponse_image.content
-    print(reponse_image)
+    # print(reponse_image)
     img = Image.open(BytesIO(reponse_image))
-    print(img)
+    # print(img)
     if not os.path.exists(f'output/{categorie}'):
         os.makedirs(f'output/{categorie}')
     image = img.save(f'output/{categorie}/{product_information[0]}.jpg')
-    print(image)
+    # print(image)
     #Extraction Star-rating
     class_star = soup_livre.find(class_="instock availability").find_next('p')
     star_review = class_star['class'][1]
@@ -143,9 +145,8 @@ def parser_un_livre(URL_livre):                           #ajouter tableau en pa
 entete_csv = ('product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax', 'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating', 'image_url')
 URL_categorie = categorie_du_site(website)[0]
 nom_categorie = categorie_du_site(website)[1]
-dictionnaire_nom_categorie = {}
+dictionnaire_nom_categorie = {0 : "ANALYSER L'ENSEMBLE DES CATEGORIES"}
 dictionnaire_URL_categorie = {0 : URL_categorie}
-# dictionnaire_categorie = {0 : URL_categorie}
 for i, cat_nom in enumerate(nom_categorie):
     dictionnaire_nom_categorie[i+1] = cat_nom
 for i, cat_URL in enumerate(URL_categorie):
@@ -158,26 +159,25 @@ if selection_categorie != 0:
     URL_categorie_selection = [dictionnaire_URL_categorie[selection_categorie]]
 else:
     URL_categorie_selection = URL_categorie
-print(URL_categorie_selection)
-
 for i in URL_categorie_selection:
-    print(i)
     URL_complement = traitement_pour_plusieurs_pages_par_categorie(i)
     URL_categorie = URL_categorie_selection + URL_complement
+print(f'URL categorie selection : {URL_categorie_selection}')
+print(f'URL complement : {URL_complement}')
 print(f'URL categorie : {URL_categorie}')
 
 for i in URL_categorie:
     href_categorie = listes_livres_par_categorie(i)
-print(f'href_livres_in_categorie : {href_categorie}')
+print(len(href_categorie))
 
 
 tableau = pd.DataFrame(columns = entete_csv)
 for i in href_categorie:
     liste_livre = parser_un_livre(i)
-    print(liste_livre)
+    # print(liste_livre)
     tableau.loc[len(tableau)] = liste_livre
     categorie_dossier = liste_livre[-3]
-    print(categorie_dossier)
-print(tableau)
+    # print(categorie_dossier)
+# print(tableau)
 for categorie_dataframe, group in tableau.groupby('category'):
     group.to_csv(f'output/{categorie_dossier}/{categorie_dataframe}.csv', index=None,  sep= ';',  encoding='utf-32')
