@@ -10,7 +10,7 @@ prefixe_URL = 'http://books.toscrape.com/'
 ### FONCTIONS
 
 # Extraction des categories du website
-def categorie_du_site (website):
+def parser_page_accueil(website):
     reponse = requests.get(website)
     soup = BeautifulSoup(reponse.text, 'lxml')
     URL_categorie = []
@@ -21,20 +21,20 @@ def categorie_du_site (website):
         href_categorie = prefixe_URL + i.get('href')
         URL_categorie.append(href_categorie)
         text_categorie.append(i.text.strip())
-    return(URL_categorie, text_categorie)
+    return(URL_categorie, text_categorie)               #URL_categorie = lien URL, text_categorie = Nom categorie  
 
 #Extraction des URL de livres pour une page
 def parser_une_page(URL):
-    href_livres_in_page = []
+    URL_livre_par_page = []
     reponse = requests.get(URL)
     soup = BeautifulSoup(reponse.text, 'lxml')
     for i in soup.find_all(class_='product_pod'):
         for j in i.find_all(class_='image_container'):
             sufixe_URL = j.findChild('a').get('href')
             URL_complet = sufixe_URL.replace("../../..", "http://books.toscrape.com/catalogue")
-            href_livres_in_page.append(URL_complet)
-    print(f'href_livres_in_page : {href_livres_in_page}')
-    return(href_livres_in_page)
+            URL_livre_par_page.append(URL_complet)
+    print(f'URL livre par page : {URL_livre_par_page}')
+    return(URL_livre_par_page)
 
 #Extraction des URL de livres pour une catégorie
 def parser_une_categorie(URL_index):
@@ -43,7 +43,7 @@ def parser_une_categorie(URL_index):
     nb_page = 0
     entete_csv = ('product_page_url', 'universal_ product_code (upc)', 'title', 'price_including_tax', 'price_excluding_tax', 'number_available', 'product_description', 'category', 'review_rating', 'image_url')
     tableau = pd.DataFrame(columns = entete_csv)
-    href_livres_in_categorie = parser_une_page(URL_index)
+    URL_livre_par_categorie = parser_une_page(URL_index)
     if soup.find(class_="pager"):
         text_pager = soup.find(class_='current').get_text()
         char = text_pager.strip()
@@ -53,9 +53,9 @@ def parser_une_categorie(URL_index):
         for i in range(2,nb_page+1):
             sufixe_URL = ("page-"+str(i)+".html")
             page_suivante = prefixe_URL_index + sufixe_URL
-            href_livres_in_categorie = href_livres_in_categorie + parser_une_page(page_suivante)
-    print(f'href_livres_in_categorie : {href_livres_in_categorie}')
-    for i in href_livres_in_categorie:
+            URL_livre_par_categorie = URL_livre_par_categorie + parser_une_page(page_suivante)
+    print(f'URL livre par categorie : {URL_livre_par_categorie}')
+    for i in URL_livre_par_categorie:
         parser_un_livre(i, tableau)  
 
 #Extraction, Transformation, Chargement des informations pour un livre
@@ -114,9 +114,9 @@ def parser_un_livre(URL_livre, tableau):
 
 ### CODE PRINCIPAL
 
-retour_data_categorie_du_site = categorie_du_site(website)
-URL_categorie = retour_data_categorie_du_site[0]
-nom_categorie = retour_data_categorie_du_site[1]
+data_parser_page_accueil = parser_page_accueil(website)
+URL_categorie = data_parser_page_accueil[0]
+nom_categorie = data_parser_page_accueil[1]
 
 #Enregistrement des URL de chaque catégorie dans un CSV
 with open(f'output/URL_categories.csv', 'w', newline='', encoding='utf-8') as extract_categories_to_csv:
@@ -127,7 +127,7 @@ with open(f'output/URL_categories.csv', 'w', newline='', encoding='utf-8') as ex
         writer.writerow([i])
 
 #Création dictionnaires pour sélection catégorie à parser
-dictionnaire_nom_categorie = {0 : "ANALYSER L'ENSEMBLE DES CATEGORIES"}             #regarder une structure sur 3 colonnes
+dictionnaire_nom_categorie = {0 : "ANALYSER L'ENSEMBLE DES CATEGORIES"}
 dictionnaire_URL_categorie = {0 : URL_categorie}
 for i, cat_nom in enumerate(nom_categorie):
     dictionnaire_nom_categorie[i+1] = cat_nom
@@ -138,12 +138,9 @@ print("\nIndiquez le numéro de la catégorie à analyser. '0' permet d'analyser
 print(f'LES CATEGORIES : \n {dictionnaire_nom_categorie} \n')
 selection_categorie = []
 selection_categorie = input('Entrez le numéro associé à la catégorie : ')
-# selection_categorie = selection_categorie.split(',')
-# print(selection_categorie)
 selection_categorie = int(selection_categorie)
 #Cération de la sélection
 if selection_categorie != 0:
-    # for i in selection_categorie:
     URL_categorie_selection = [dictionnaire_URL_categorie[selection_categorie]]
     print(URL_categorie_selection)
 else:
