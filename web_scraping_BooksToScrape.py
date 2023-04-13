@@ -134,7 +134,7 @@ for i, cat_nom in enumerate(nom_categorie):
 for i, cat_URL in enumerate(URL_categorie):
     dictionnaire_URL_categorie[i+1] = cat_URL
 #Choix de la sélection à parser
-print("\nIndiquez le numéro de la catégorie à analyser. '0' permet d'analyser l'ensemble du site.\n")
+print("\nIndiquez le numéro de la catégorie à analyser (il est possible d'analyser une seule catégorie à la fois dans cette version).\n'0' permet d'analyser l'ensemble du site.\n")
 print(f'LES CATEGORIES : \n {dictionnaire_nom_categorie} \n')
 selection_categorie = []
 selection_categorie = input('Entrez le numéro associé à la catégorie : ')
