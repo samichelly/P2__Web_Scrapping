@@ -4,7 +4,6 @@ Projet 2 OC : Web Scrapping
 
 Objectif de développement :
 Ce programme a été développé dans le but de concevoir un pipeline ETL à partir du site web http://books.toscrape.com/index.html. L’objectif étant de pouvoir extraire et analyser les données pour chacun des livres commercialisés par le revendeur.
-Schéma de principe :
  
 État du développement :
 Le développement est actuellement terminé. Cependant des évolutions suivantes seraient les bienvenues :
