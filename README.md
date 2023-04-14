@@ -22,6 +22,7 @@ Le programme a été développé à partir de Python 3.10, et utilise les paquet
 Exécution du programme :
 Le programme peut être lancé via la ligne de commande python .\web_scraping_BooksToScrape.py, 
 Puis il faudra renseigner l’adresse URL de la page d’accueil du site, et suivre les indications fournies dans le déroulement du programme.
+Pour exécuter au mieux ce programme, il faut créer un environnement virtuel de travail. Pour ce faire, placer le programme web_scraping_BooksToScrape.py ainsi que le fichier requirements.txt dans un même dossier. Dans ce dernier, lancer via le terminal la commande python3 -m venv env, puis la commande source env/bin/activate permettant et d’activer l’environnement virtuel. Une fois l’environnement crée, passer la commande pip install -r requirements.txt afin d’installer les paquets nécessaires au bon fonctionnement du script. Pour vérifier leur installation, lancer la commande pip freeze.
 
 Description des fonctions :
 Le programme se compose de 4 fonctions principales :
