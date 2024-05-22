@@ -1,7 +1,5 @@
 # PROJECT_2__Web_Scraping
 
-**Project 2 OC: Web Scraping**
-
 ## Development Objective
 
 This project was developed to design an ETL (Extract, Transform, Load) pipeline from the website [Books to Scrape](http://books.toscrape.com/index.html). The objective is to extract and analyze data for each book sold by the retailer.
